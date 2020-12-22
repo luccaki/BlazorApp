@@ -1,0 +1,91 @@
+﻿@using BlazorApp.Services
+
+@page "/"
+
+<h1 class="display-4">Bem vindo</h1>
+<p>Para saber mais sobre o projeto acesse: <a href="https://github.com/luccaki">github.com/luccaki</a>.</p>
+
+<h1>Sincronizador de Legendas</h1>
+
+<EditForm Model="Command" OnValidSubmit="HandleValidSubmit" enctype="multipart/form-data">
+    <DataAnnotationsValidator />
+
+    <div class="row form-group">
+        <div class="col col-lg-5">
+            <InputFile OnChange="OnInputFileChange" class="form-control" id="arquivo" />
+        </div>
+    </div>
+
+    <div class="row no-gutters d-flex">
+        <div class="form-group d-flex col col-lg-1">
+            <InputSelect @bind-Value="Command.Offset" class="form-control" id="offset">
+                <option>+</option>
+                <option>-</option>
+            </InputSelect>
+        </div>
+
+        <div class="form-group d-flex align-items-center col col-lg-1">
+            <InputNumber @bind-Value="Command.Horas" class="form-control" id="horas" min="0" max="999" />:
+        </div>
+
+        <div class="form-group d-flex align-items-center col col-lg-1">
+            <InputNumber @bind-Value="Command.Minutos" class="form-control" id="minutos" min="0" max="59" />:
+        </div>
+
+        <div class="form-group d-flex align-items-center col col-lg-1">
+            <InputNumber @bind-Value="Command.Segundos" class="form-control" id="segundos" min="0" max="59" />,
+        </div>
+
+        <div class="form-group d-flex align-items-center col col-lg-1">
+            <InputNumber @bind-Value="Command.Milisegundos" class="form-control" id="milisegundos" min="0" max="999" />
+        </div>
+    </div>
+
+    <ValidationSummary />
+    <div class="row">
+        <div class="col col-lg-5 d-flex justify-content-between">
+            @if (toast)
+            {
+                <span class="alert-danger">Aceitamos apenas arquivos .srt</span>
+            }
+            else
+            {
+                <input type="submit" class="btn btn-primary" value="Submit" />
+            }
+            <a class="mt-2" href="historico">open history --></a>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    SubmeterArquivos.Command Command = new() { Offset = '+', Horas = 0, Minutos = 0, Segundos = 0, Milisegundos = 0 };
+
+    SubmeterArquivos.CommandHandler Handler = new();
+
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    bool toast = false;
+
+    async Task HandleValidSubmit()
+    {
+        Console.WriteLine("Handle");
+        await Handler.Handle(Command);
+        Command = new() { Offset = '+', Horas = 0, Minutos = 0, Segundos = 0, Milisegundos = 0 };
+    }
+
+    void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+
+        if (!selectedFiles.FirstOrDefault().Name.Contains(".srt"))
+        {
+            toast = true;
+        }
+        else
+        {
+            toast = false;
+        }
+
+        Command.Arquivo = selectedFiles.FirstOrDefault();
+        this.StateHasChanged();
+    }
+}
